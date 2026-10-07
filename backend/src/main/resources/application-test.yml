@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  data:
+    redis:
+      host: localhost
+      port: 6370
+
+banklens:
+  jwt:
+    secret: test-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
+    expiration-ms: 3600000
+  anthropic:
+    api-key: test-key
+    model: claude-sonnet-4-5
+    max-tokens: 100
+  rate-limit:
+    analyses-per-day: 100
+    requests-per-minute: 100

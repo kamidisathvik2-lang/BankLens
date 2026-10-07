@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/banklens}
+    username: ${DATABASE_USER:banklens}
+    password: ${DATABASE_PASSWORD:banklens}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+banklens:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-in-production-must-be-at-least-256-bits-long}
+    expiration-ms: 86400000   # 24 hours
+  anthropic:
+    api-key: ${ANTHROPIC_API_KEY}
+    model: claude-sonnet-4-5
+    max-tokens: 4000
+  rate-limit:
+    analyses-per-day: 10
+    requests-per-minute: 30
+
+logging:
+  level:
+    com.banklens: INFO
+    org.springframework.security: WARN
