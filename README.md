@@ -1,70 +1,136 @@
-# Getting Started with Create React App
+<<<<<<< HEAD
+<<<<<<< HEAD
+# BankLens — Production Bank Statement Analyzer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AI-powered bank statement analysis built with React + Spring Boot + PostgreSQL + Redis + AWS.
 
-## Available Scripts
+## Architecture
 
-In the project directory, you can run:
+```
+React (Vercel/S3)  →  Spring Boot API (ECS Fargate)
+                            ↓              ↓
+                       PostgreSQL      Redis
+                         (RDS)    (ElastiCache)
+                            ↓
+                      Anthropic API
+```
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+**Backend:** Java 17, Spring Boot 3.2, Spring Security, JPA, Redis, Apache PDFBox, JWT  
+**Frontend:** React 19, Context API  
+**Database:** PostgreSQL 15  
+**Cache:** Redis 7  
+**Infra:** Docker, AWS ECS Fargate, RDS, ElastiCache, ECR, S3, CloudFront  
+**CI/CD:** GitHub Actions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Quick Start (Local)
 
-### `npm test`
+### Prerequisites
+- Docker + Docker Compose
+- Java 17
+- Node 20
+- An Anthropic API key
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Run everything with Docker Compose
 
-### `npm run build`
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/banklens.git
+cd banklens
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Set your Anthropic key
+export ANTHROPIC_API_KEY=sk-ant-...
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Start all services
+docker-compose up --build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Frontend: http://localhost:3000  
+Backend: http://localhost:8080  
+API docs: http://localhost:8080/actuator/health
 
-### `npm run eject`
+### Run backend locally (without Docker)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+cd backend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Start PostgreSQL and Redis only
+docker-compose up postgres redis -d
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Run Spring Boot
+ANTHROPIC_API_KEY=sk-ant-... mvn spring-boot:run
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Run frontend locally
 
-## Learn More
+```bash
+cd frontend
+npm install
+REACT_APP_API_URL=http://localhost:8080 npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## API Reference
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+POST /api/auth/register    { email, password }  → { token, email, userId }
+POST /api/auth/login       { email, password }  → { token, email, userId }
 
-### Code Splitting
+POST /api/analyze          multipart/form-data: file  → analysis JSON
+GET  /api/history          ?page=0&size=10       → { items, totalPages }
+GET  /api/history/:id                            → analysis JSON
+POST /api/history/:id/chat { question }          → { answer }
+POST /api/history/:id/explain { transaction }    → { explanation }
+GET  /api/rate-limit                             → { remaining }
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+All endpoints except `/api/auth/**` require `Authorization: Bearer <token>` header.
 
-### Analyzing the Bundle Size
+## Running Tests
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+cd backend
+mvn test
+```
 
-### Making a Progressive Web App
+Test coverage includes:
+- `AuthControllerTest` — register, login, validation, auth errors
+- `JwtServiceTest` — token generation, validation, expiry
+- `AnalysisServiceTest` — happy path, rate limit, PDF failure, JSON parse failure
+- `PdfServiceTest` — file validation, size limits, content type checks
+- `RateLimitServiceTest` — limit enforcement, TTL, remaining count
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Environment Variables
 
-### Advanced Configuration
+| Variable | Description | Required |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic API key | Yes |
+| `DATABASE_URL` | PostgreSQL JDBC URL | Yes |
+| `DATABASE_USERNAME` | DB username | Yes |
+| `DATABASE_PASSWORD` | DB password | Yes |
+| `REDIS_HOST` | Redis hostname | Yes |
+| `REDIS_PORT` | Redis port (default: 6379) | No |
+| `JWT_SECRET` | 64-char hex secret for JWT signing | Yes |
+| `CORS_ORIGINS` | Comma-separated allowed origins | Yes |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Deploy to AWS
 
-### Deployment
+See `.github/workflows/deploy.yml` for the full CI/CD pipeline.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Required GitHub Secrets:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+AWS resources to create:
+1. ECR repository: `banklens-backend`
+2. ECS cluster: `banklens-cluster`
+3. ECS service + task definition: `banklens-service` / `banklens`
+4. RDS PostgreSQL instance
+5. ElastiCache Redis cluster
+6. Secrets Manager entries for all env vars
+=======
+# BankLens
+>>>>>>> d33963707a83a6f2d261e2207b5497ace274369b
+=======
+# BankLens
+>>>>>>> 8bce45ce596eac6888c14b1ea84d6f025f7facf6
